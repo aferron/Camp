@@ -7,6 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver import Firefox
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 
 config = ConfigParser.ConfigParser()
@@ -91,7 +92,8 @@ for i in range(NUM_RESERVATIONS):
 
 	count = str(i + 1)
 
-	driver = webdriver.Firefox(firefoxProfile)
+	#driver = webdriver.Firefox(firefoxProfile)
+        driver = Firefox(firefoxProfile)
 	driver.maximize_window()
 
 	ARV_DATE = config.get("reservation_" + count, "arv_date")
@@ -103,13 +105,13 @@ for i in range(NUM_RESERVATIONS):
 
 	print SITES
 
-	url_request = 'http://www.recreation.gov/campsiteDetails.do?siteId={site_id}&contractCode=NRSO&parkId={park_id}&arvdate=' + ARV_DATE + '&lengthOfStay=' + LENGTH_OF_STAY
-
+	#url_request = 'http://www.recreation.gov/campsiteDetails.do?siteId={site_id}&contractCode=NRSO&parkId={park_id}&arvdate=' + ARV_DATE + '&lengthOfStay=' + LENGTH_OF_STAY
+        url_request = 'https://www.recreation.gov/camping/campsites/{site_id}'
 	# Check if sites are available yet - if not refresh
 
 	# Find an available site
 	selected_site = False
-	
+
 	selected_site = checksites()
 	# if we've got a selected_site, automate the booking process
 
@@ -151,7 +153,7 @@ for i in range(NUM_RESERVATIONS):
 			driver.find_element_by_id('continueshop').click()
 
 			print "You have 15 minutes to complete this reservation in the browser window."
-			
+
 		else:
 			print('No available sites. (L2)')
 	else:
