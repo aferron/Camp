@@ -38,13 +38,14 @@ def get_dates(driver):
     for date in dates:
         if target_date in date.get_attribute('innerHTML') and date.is_displayed():
             date.click()
-        dates = driver.find_elements_by_class_name("CalendarDay.CalendarDay_1.CalendarDay__default.CalendarDay__default_2")
+            break
 
-#def click_date_for_site(driver):
-#    avail_dates = driver.find_elements_by_class_name("rec-availability-date")
-#    for adate in avail_dates:
-#        if "Site 015 is available" in adate.get_attribute('aria-label'):
-#            print(adate.get_attribute('aria-label'))
+def click_date_for_site(driver):
+    avail_dates = driver.find_elements_by_class_name("rec-availability-date")
+    for adate in avail_dates:
+        print(adate)
+        if "Site 015 is available" in adate.get_attribute('aria-label'):
+            print(adate.get_attribute('aria-label'))
 
 driver = Firefox(options=options)
 driver.get("https://www.recreation.gov/camping/campgrounds/232854/availability")
@@ -52,6 +53,7 @@ driver.maximize_window()
 WebDriverWait(driver, timeout=5).until(document_initialized)
 month = click_to_target_month(driver)
 get_dates(driver)
+click_date_for_site(driver)
 
 
 
