@@ -11,7 +11,7 @@ options.page_load_strategy = 'normal'
 
 target_month = "June"
 target_date = "14"
-target_site_num = "011"
+target_site_num = 11
 
 def document_initialized(driver):
     open_month = driver.find_element(By.CSS_SELECTOR, "button.SingleDatePickerInput_calendarIcon.SingleDatePickerInput_calendarIcon_1").click()
@@ -40,12 +40,27 @@ def get_dates(driver):
             date.click()
             break
 
+def table_loaded(driver):
+    return driver.find_element_by_xpath("//table/tbody/tr[7]/td")
+
+
 def click_date_for_site(driver):
-    avail_dates = driver.find_elements_by_class_name("rec-availability-date")
-    for adate in avail_dates:
-        print(adate)
-        if "Site 015 is available" in adate.get_attribute('aria-label'):
-            print(adate.get_attribute('aria-label'))
+    trs = driver.find_elements_by_xpath("//table/tbody/tr")
+
+    for tr in trs:
+        site = tr.find_element_by_class_name("rec-availability-item")
+        found_site = int(site.text)
+        if found_site == target_site_num:
+            print("site", found_site, "found")
+            break
+
+    #div = driver.find_element_by_xpath("//table/tbody/tr[15]/td[2]").click()
+    #aria_label = div.find_element_by_css_selector('button').click()
+    #avail_dates = driver.find_elements_by_class_name("rec-availability-date")
+    #for adate in avail_dates:
+        #print(adate)
+        #if "Site 015 is available" in adate.get_attribute('aria-label'):
+            #print(adate.get_attribute('aria-label'))
 
 driver = Firefox(options=options)
 driver.get("https://www.recreation.gov/camping/campgrounds/232854/availability")
@@ -53,8 +68,10 @@ driver.maximize_window()
 WebDriverWait(driver, timeout=5).until(document_initialized)
 month = click_to_target_month(driver)
 get_dates(driver)
+WebDriverWait(driver, timeout=5).until(table_loaded)
 click_date_for_site(driver)
 
+#driver.quit()
 
 
 
@@ -65,7 +82,6 @@ click_date_for_site(driver)
 #for x in range(10):
 #    inputbox.send_keys(Keys.BACKSPACE)
 #driver.find_element(By.TAG_NAME, 'button').click()
-driver.quit()
 
 
      #days = driver.find_element(By.CSS_SELECTOR, "td.CalendarDay.CalendarDay_1.CalendarDay__defaultCursor.CalendarDay__defaultCursor_2.CalendarDay__default.CalendarDay__default_3.CalendarDay__blocked_calendar.CalendarDay__blocked_calendar_4")
