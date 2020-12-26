@@ -12,29 +12,39 @@ options.page_load_strategy = 'normal'
 target_month = "June"
 target_date = "14"
 target_site_num = 11
+date_pick_button = "button.SingleDatePickerInput_calendarIcon.SingleDatePickerInput_calendarIcon_1"
+cal_month = "CalendarMonth_caption.CalendarMonth_caption_1"
+direction_left = "div.SingleDatePicker_picker.SingleDatePicker_picker_1.SingleDatePicker_picker__directionLeft.SingleDatePicker_picker__directionLeft_2"
+right_arrow = "div.sarsa-day-picker-range-controller-month-navigation-button.right"
+cal_day = "CalendarDay.CalendarDay_1.CalendarDay__default.CalendarDay__default_2"
+
 
 def document_initialized(driver):
-    open_month = driver.find_element(By.CSS_SELECTOR, "button.SingleDatePickerInput_calendarIcon.SingleDatePickerInput_calendarIcon_1").click()
-    return driver.find_element(By.CLASS_NAME, "CalendarMonth_caption.CalendarMonth_caption_1")
+    #open_month = driver.find_element(By.CSS_SELECTOR, date_pick_button).click()
+    #return driver.find_element(By.CLASS_NAME, cal_month)
+    return driver.find_element(By.CSS_SELECTOR, date_pick_button)
 
 def get_month(driver):
-    open_month = driver.find_element(By.CSS_SELECTOR, "button.SingleDatePickerInput_calendarIcon.SingleDatePickerInput_calendarIcon_1").click()
-    month_container = driver.find_element(By.CSS_SELECTOR, "div.SingleDatePicker_picker.SingleDatePicker_picker_1.SingleDatePicker_picker__directionLeft.SingleDatePicker_picker__directionLeft_2")
-    months = driver.find_elements_by_class_name("CalendarMonth_caption.CalendarMonth_caption_1")
+    open_month = driver.find_element(By.CSS_SELECTOR, date_pick_button).click()
+    #month_container = driver.find_element(By.CSS_SELECTOR, direction_left)
+    months = driver.find_elements_by_class_name(cal_month)
     #monthText = month.get_attribute('innerHTML')
     return months
 
 def click_to_target_month(driver):
-    months = get_month(driver)
+    #months = get_month(driver)
+    open_month = driver.find_element(By.CSS_SELECTOR, date_pick_button).click()
+    months = driver.find_elements_by_class_name(cal_month)
 
     while target_month not in months[1].get_attribute('innerHTML'):
-        driver.find_element(By.CSS_SELECTOR, "div.sarsa-day-picker-range-controller-month-navigation-button.right").click()
-        months = get_month(driver)
+        driver.find_element(By.CSS_SELECTOR, right_arrow).click()
+        #months = get_month(driver)
+        months = driver.find_elements_by_class_name(cal_month)
     return months[1]
 
 
 def get_dates(driver):
-    dates = driver.find_elements_by_class_name("CalendarDay.CalendarDay_1.CalendarDay__default.CalendarDay__default_2")
+    dates = driver.find_elements_by_class_name(cal_day)
     for date in dates:
         if target_date in date.get_attribute('innerHTML') and date.is_displayed():
             date.click()
@@ -46,13 +56,16 @@ def table_loaded(driver):
 
 def click_date_for_site(driver):
     trs = driver.find_elements_by_xpath("//table/tbody/tr")
+    row = None
 
     for tr in trs:
+        row = tr
         site = tr.find_element_by_class_name("rec-availability-item")
         found_site = int(site.text)
         if found_site == target_site_num:
             print("site", found_site, "found")
             break
+
 
     #div = driver.find_element_by_xpath("//table/tbody/tr[15]/td[2]").click()
     #aria_label = div.find_element_by_css_selector('button').click()
