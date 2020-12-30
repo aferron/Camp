@@ -20,6 +20,7 @@ direction_left = "div.SingleDatePicker_picker.SingleDatePicker_picker_1.SingleDa
 right_arrow = "div.sarsa-day-picker-range-controller-month-navigation-button.right"
 cal_day = "CalendarDay.CalendarDay_1.CalendarDay__default.CalendarDay__default_2"
 example_campground = "https://www.recreation.gov/camping/campgrounds/232854/availability"
+table_scroller = "sticky-table-horizontal-scroller"
 
 
 
@@ -47,30 +48,28 @@ class wait(object):
 
 def document_initialized(driver):
     open_month = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, date_pick_button)))
-    #open_month.find_element(By.CSS_SELECTOR, date_pick_button).click()
-    #WebDriverWait(driver, 20).until(EC.element_to_be_clickable((open_month.find_element(By.CSS_SELECTOR, date_pick_button)))).click()
-
-    #return driver.find_element(By.CLASS_NAME, cal_month)
     return driver.find_element(By.CSS_SELECTOR, date_pick_button)
 
 
 def click_to_target_month(driver):
-    #need to scroll up if the date pick button isn't visible. how to scroll up??
-    #use webdriver wait from here?https://selenium-python.readthedocs.io/waits.html
-    table = WebDriverWait(driver, 20).until(EC.element_to_be
-    while not driver.find_element(By.CSS_SELECTOR, date_pick_button).is_displayed()
-        driver.send_keys(Keys.ARROWUP)
+    driver.execute_script("window.scrollTo(document.body.scrollHeight,0);")
 
     open_month = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, date_pick_button))).click()
     #open_month = driver.find_element(By.CSS_SELECTOR, date_pick_button).click()
+    #months = driver.find_elements_by_class_name(cal_month)
+    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, cal_month)))
     months = driver.find_elements_by_class_name(cal_month)
+    print("months: ", end='')
+    print(months[0].get_attribute('innerHTML'), months[1].get_attribute('innerHTML'), months[2].get_attribute('innerHTML'))
 
     while target_month not in months[1].get_attribute('innerHTML'):
         WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, right_arrow))).click()
-        #driver.find_element(By.CSS_SELECTOR, right_arrow).click()
+        #WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, cal_month)))
         months = driver.find_elements_by_class_name(cal_month)
-    print("returning from click to target month:", months[1].text)
-    return months[1].text
+        #print("months: ", end='')
+        #print(months[0].get_attribute('innerHTML'), months[1].get_attribute('innerHTML'), months[2].get_attribute('innerHTML'))
+
+    return months[1].get_attribute('innerHTML')
 
 
 def get_dates(driver):
@@ -78,10 +77,12 @@ def get_dates(driver):
     found = ''
     for date in dates:
         found = date.text
+        # try get innerText
         if target_date in date.get_attribute('innerHTML') and date.is_displayed():
-            WebDriverWait(driver, 20).until(EC.element_to_be_clickable(date)).click()
+            date.click()
+            #WebDriverWait(driver, 20).until(EC.element_to_be_clickable(date)).click()
             break
-    return dates
+    return found
 
 
 def table_loaded(driver):
@@ -105,6 +106,7 @@ def click_date_for_site(driver):
 
 try:
     driver = Firefox(options=options)
+    driver.implicitly_wait(10)
 except Exception as e:
     print("Fail: Browser setup ", e)
     driver.quit
@@ -123,8 +125,9 @@ else:
     print("Success: Initial load")
 
 try:
-    #driver.maximize_window()
+    driver.maximize_window()
     month = click_to_target_month(driver)
+    print("month returned:", month)
     assert target_month in month
 except Exception as e:
     print("Fail: nav to target month", e)
