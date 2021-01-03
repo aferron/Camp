@@ -98,22 +98,32 @@ def click_date_for_site(driver):
             found_row = row
             break
 
-    print("number of days selected: ", select_avail_dates(driver, found_row))
+    try:
+        selected = select_avail_dates(driver, found_row)
+    except Exception as e:
+        print("Fail: select available dates", e)
+        driver.quit
+    else:
+        print("Success: select available dates")
+        print("number of days selected: ", selected)
     return found_site
 
 
 def select_avail_dates(driver, row):
     tds = row.find_elements_by_tag_name("td")
+    tds.pop(0)
     count = 0
     for td in tds:
-        if td.get_attribute("class") == "camp-location-name":
-            continue
+        #if td.get_attribute("class") == "camp-location-name":
+            #continue
         # add wait here for availability
-        if td.get_attribute("class") == "end":
+        #if td.get_attribute("class") == "end":
+        if count == 1:
+            count += 1
             continue
         td.click()
         count += 1
-        tds = row.find_elements_by_tag_name("td")
+        #tds = row.find_elements_by_tag_name("td")
     return count
 
 
