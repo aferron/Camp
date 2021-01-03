@@ -15,7 +15,7 @@ target_month = "June"
 target_date = "14"
 target_site_num = 11
 date_pick_button = "button.SingleDatePickerInput_calendarIcon.SingleDatePickerInput_calendarIcon_1"
-cal_month = "CalendarMonth_caption.CalendarMonth_caption_1"
+cal_month = "CalendarMonth_caption"
 direction_left = "div.SingleDatePicker_picker.SingleDatePicker_picker_1.SingleDatePicker_picker__directionLeft.SingleDatePicker_picker__directionLeft_2"
 right_arrow = "div.sarsa-day-picker-range-controller-month-navigation-button.right"
 cal_day = "CalendarDay.CalendarDay_1.CalendarDay__default.CalendarDay__default_2"
@@ -55,22 +55,19 @@ def click_to_target_month(driver):
     driver.execute_script("window.scrollTo(document.body.scrollHeight,0);")
 
     open_month = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, date_pick_button))).click()
-    #open_month = driver.find_element(By.CSS_SELECTOR, date_pick_button).click()
-    #months = driver.find_elements_by_class_name(cal_month)
     WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, cal_month)))
     months = driver.find_elements_by_class_name(cal_month)
-    print("months: ", end='')
-    print(months[0].get_attribute('innerHTML'), months[1].get_attribute('innerHTML'), months[2].get_attribute('innerHTML'))
 
+    old_month = months[1].get_attribute('innerHTML')
+    new_month = old_month
     while target_month not in months[1].get_attribute('innerHTML'):
         WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, right_arrow))).click()
-        #WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CLASS_NAME, cal_month)))
-        months = driver.find_elements_by_class_name(cal_month)
-        #print("months: ", end='')
-        #print(months[0].get_attribute('innerHTML'), months[1].get_attribute('innerHTML'), months[2].get_attribute('innerHTML'))
+        while old_month == new_month:
+            months = driver.find_elements_by_class_name(cal_month)
+            new_month = months[1].get_attribute('innerHTML')
+        old_month = new_month
 
     return months[1].get_attribute('innerHTML')
-
 
 def get_dates(driver):
     dates = driver.find_elements_by_class_name(cal_day)
@@ -80,27 +77,45 @@ def get_dates(driver):
         # try get innerText
         if target_date in date.get_attribute('innerHTML') and date.is_displayed():
             date.click()
-            #WebDriverWait(driver, 20).until(EC.element_to_be_clickable(date)).click()
+
             break
     return found
-
 
 def table_loaded(driver):
     return driver.find_element_by_xpath("//table/tbody/tr[7]/td")
 
 
 def click_date_for_site(driver):
-    trs = driver.find_elements_by_xpath("//table/tbody/tr")
-    row = None
+    found_site = 0
+    found_row = None
+    #div = driver.find_element_by_xpath("//table/tbody/tr[15]/td[2]").click()
+    tbody = driver.find_element_by_xpath("//table/tbody")
+    rows = driver.find_elements_by_class_name("null ")
 
-    for tr in trs:
-        row = tr
-        site = tr.find_element_by_class_name("rec-availability-item")
-        found_site = int(site.text)
+    for row in rows:
+        found_site = int(row.find_element_by_class_name("rec-availability-item").text)
         if found_site == target_site_num:
-            print("site", found_site, "found")
+            found_row = row
             break
+
+    print("number of days selected: ", select_avail_dates(driver, found_row))
     return found_site
+
+
+def select_avail_dates(driver, row):
+    tds = row.find_elements_by_tag_name("td")
+    count = 0
+    for td in tds:
+        if td.get_attribute("class") == "camp-location-name":
+            continue
+        # add wait here for availability
+        if td.get_attribute("class") == "end":
+            continue
+        td.click()
+        count += 1
+        tds = row.find_elements_by_tag_name("td")
+    return count
+
 
 
 
@@ -154,22 +169,3 @@ else:
 
 driver.quit()
 
-
-    #div = driver.find_element_by_xpath("//table/tbody/tr[15]/td[2]").click()
-    #aria_label = div.find_element_by_css_selector('button').click()
-    #avail_dates = driver.find_elements_by_class_name("rec-availability-date")
-    #for adate in avail_dates:
-        #print(adate)
-        #if "Site 015 is available" in adate.get_attribute('aria-label'):
-            #print(adate.get_attribute('aria-label'))
-
-#inputbox = driver.find_element(By.CSS_SELECTOR, "input#single-date-picker-1.DateInput_input.DateInput_input_1")
-#inputbox.send_keys("06/08/2020" + Keys.ENTER)
-#for x in range(10):
-#    inputbox.send_keys(Keys.ARROW_LEFT)
-#for x in range(10):
-#    inputbox.send_keys(Keys.BACKSPACE)
-#driver.find_element(By.TAG_NAME, 'button').click()
-
-
-     #days = driver.find_element(By.CSS_SELECTOR, "td.CalendarDay.CalendarDay_1.CalendarDay__defaultCursor.CalendarDay__defaultCursor_2.CalendarDay__default.CalendarDay__default_3.CalendarDay__blocked_calendar.CalendarDay__blocked_calendar_4")
