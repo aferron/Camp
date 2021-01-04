@@ -114,16 +114,20 @@ def select_avail_dates(driver, row):
     tds.pop(0)
     count = 0
     for td in tds:
-        #if td.get_attribute("class") == "camp-location-name":
-            #continue
         # add wait here for availability
-        #if td.get_attribute("class") == "end":
         if count == 1:
             count += 1
             continue
-        td.click()
-        count += 1
-        #tds = row.find_elements_by_tag_name("td")
+        # replace isEnabled with a custom staleness check
+        if td.isEnabled():
+            td.click()
+            count += 1
+        else:
+            tds = row.find_elements_by_tag_name("td")
+            tds.pop(0)
+            tds[count].click()
+            count += 1
+            break
     return count
 
 
