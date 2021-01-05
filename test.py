@@ -119,7 +119,8 @@ def select_avail_dates(driver, row):
             count += 1
             continue
         # replace isEnabled with a custom staleness check
-        if td.isEnabled():
+        #if td.is_enabled():
+        if not_stale(driver, td):
             td.click()
             count += 1
         else:
@@ -129,6 +130,13 @@ def select_avail_dates(driver, row):
             count += 1
             break
     return count
+
+def not_stale(driver, element):
+    try:
+        element.is_enabled()
+        return true
+    except Exception as e:
+        return false
 
 
 
