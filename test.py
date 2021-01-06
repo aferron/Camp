@@ -21,7 +21,8 @@ right_arrow = "div.sarsa-day-picker-range-controller-month-navigation-button.rig
 cal_day = "CalendarDay.CalendarDay_1.CalendarDay__default.CalendarDay__default_2"
 example_campground = "https://www.recreation.gov/camping/campgrounds/232854/availability"
 table_scroller = "sticky-table-horizontal-scroller"
-
+next_days = "/html/body/div[2]/div/div/div/div[2]/div/div/div[1]/div[1]/div[1]/div[3]/div[2]/div[2]/div/div[1]/div/div/div[2]/div/button[3]"
+next_days_class = "sarsa-button.sarsa-button-link.sarsa-button-sm"
 
 
 class wait(object):
@@ -111,32 +112,28 @@ def click_date_for_site(driver):
 
 def select_avail_dates(driver, row):
     tds = row.find_elements_by_tag_name("td")
-    tds.pop(0)
+    #tds.pop(0)
     count = 0
-    for td in tds:
-        # add wait here for availability
-        if count == 1:
-            count += 1
-            continue
-        # replace isEnabled with a custom staleness check
-        #if td.is_enabled():
-        if not_stale(driver, td):
-            td.click()
-            count += 1
-        else:
-            tds = row.find_elements_by_tag_name("td")
-            tds.pop(0)
-            tds[count].click()
-            count += 1
-            break
+    length = len(tds)
+
+    for i in range(1, length):
+        if i != 2:
+            if not_stale(driver, tds[i]):
+                tds[i].click()
+            else:
+                tds = row.find_elements_by_tag_name("td")
+                tds[i].click()
+                break
+        count = i
+
     return count
 
 def not_stale(driver, element):
     try:
         element.is_enabled()
-        return true
+        return True
     except Exception as e:
-        return false
+        return False
 
 
 
@@ -146,7 +143,7 @@ try:
     driver.implicitly_wait(10)
 except Exception as e:
     print("Fail: Browser setup ", e)
-    driver.quit
+    driver.quit()
 
 print("driver version:", driver.capabilities['moz:geckodriverVersion'])
 print("browser version:", driver.capabilities['browserVersion'])
@@ -157,7 +154,7 @@ try:
     assert 'Recreation.gov' in driver.title
 except Exception as e:
     print("Fail: Initial load ", e)
-    driver.quit
+    driver.quit()
 else:
     print("Success: Initial load")
 
@@ -168,7 +165,7 @@ try:
     assert target_month in month
 except Exception as e:
     print("Fail: nav to target month", e)
-    driver.quit
+    driver.quit()
 else:
     print("Success: nav to target month")
 
@@ -176,7 +173,7 @@ try:
     clicked_date = get_dates(driver)
 except Exception as e:
     print("Fail: get dates", e)
-    driver.quit
+    driver.quit()
 else:
     print("Success: get dates returned", clicked_date)
 
@@ -185,9 +182,16 @@ try:
     assert target_site_num == found_site
 except Exception as e:
     print("Fail: nav to site number", e)
-    driver.quit
+    driver.quit()
 else:
     print("Success: nav to site number returned", found_site)
 
 driver.quit()
-
+#try:
+    #driver.find_element_by_xpath(next_days).click()
+    #WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, next_days))).click()
+#except Exception as e:
+    #print("Fail: click next days", e)
+    #driver.quit
+#else:
+    #print("Success: click next days", e)
