@@ -8,21 +8,33 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
+
+
 options = Options()
 options.page_load_strategy = 'normal'
 
+
+# Hard code the date, site number, and time to make the reservation
 target_month = "July"
 target_date = "19"
-target_site_num = 13
+target_site_num = 1
 target_min = 55
 target_hour = 7
+
+
+# Hard code email and password
+email = "you@host.com"
+password = "00000"
+
+
+# Some variables to make the code easier to read
 home = "https://www.recreation.gov/"
 date_pick_button = "button.SingleDatePickerInput_calendarIcon.SingleDatePickerInput_calendarIcon_1"
 cal_month = "CalendarMonth_caption"
 direction_left = "div.SingleDatePicker_picker.SingleDatePicker_picker_1.SingleDatePicker_picker__directionLeft.SingleDatePicker_picker__directionLeft_2"
 right_arrow = "div.sarsa-day-picker-range-controller-month-navigation-button.right"
 cal_day = "CalendarDay.CalendarDay_1.CalendarDay__default.CalendarDay__default_2"
-campground = "https://www.recreation.gov/camping/campgrounds/232854/availability"
+campground = "https://www.recreation.gov/camping/campgrounds/232000/availability"
 table_scroller = "sticky-table-horizontal-scroller"
 next_days = "/html/body/div[2]/div/div/div/div[2]/div/div/div[1]/div[1]/div[1]/div[3]/div[2]/div[2]/div/div[1]/div/div/div[2]/div/button[3]"
 next_days_class = "sarsa-button.sarsa-button-link.sarsa-button-sm"
@@ -32,9 +44,7 @@ login_xpath = "/html/body/div[2]/div/div/div/header/div/nav/div/div[2]/div/div/b
 continue_xpath = "/html/body/div[13]/div/div/div[2]/button[1]"
 
 
-
-
-
+# wait until a page loads
 class wait(object):
     def __init__(self, driver):
         self.driver = driver
@@ -42,10 +52,12 @@ class wait(object):
     def __enter__(self):
         self.old_page = self.driver.find_element_by_tag_name('html')
 
+    # check if the page is loaded
     def page_loaded(self):
         new_page = self.driver.find_element_by_tag_name('html')
         return new_page.id != self.old_page.id
 
+    # give a time limit for the page to load
     def __exit__(self, *_):
         start_time = time.time()
         while time.time() < start_time + 5:
@@ -56,27 +68,27 @@ class wait(object):
         raise Exception("Timeout waiting for page to load")
 
 
-
+# check that the page elements have loaded, using the date pick button as the test element
 def document_initialized(driver):
     open_month = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, date_pick_button)))
     return driver.find_element(By.CSS_SELECTOR, date_pick_button)
 
 
+# log in to Recreation.gov account
 def login(driver):
     nhbs = driver.find_elements(By.CLASS_NAME, "nav-header-button")
     length = len(nhbs)
 
     nhbs[1].click()
 
-    email_input = driver.find_element(By.ID, "rec-acct-sign-in-email-address").send_keys("amilaferron@gmail.com" + Keys.ENTER)
-    pwd_input = driver.find_element(By.ID, "rec-acct-sign-in-password").send_keys("kugkuw-vofxo2-gyjkoB" + Keys.ENTER)
+    email_input = driver.find_element(By.ID, "rec-acct-sign-in-email-address").send_keys(email + Keys.ENTER)
+    pwd_input = driver.find_element(By.ID, "rec-acct-sign-in-password").send_keys(password + Keys.ENTER)
 
 
     #login = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, login_xpath))).click()
 
 
-
-
+# navigate to the month that you want to make the reservation
 def click_to_target_month(driver):
     time.sleep(2)
     driver.execute_script("window.scrollTo(document.body.scrollHeight,0);")
@@ -96,6 +108,8 @@ def click_to_target_month(driver):
 
     return months[1].get_attribute('innerHTML')
 
+
+# click on the date you want
 def get_dates(driver):
     dates = driver.find_elements_by_class_name(cal_day)
     found = ''
@@ -104,19 +118,19 @@ def get_dates(driver):
         # try get innerText
         if target_date in date.get_attribute('innerHTML') and date.is_displayed():
             date.click()
-
             break
     return found
 
+
+# load the table
 def table_loaded(driver):
     return driver.find_element_by_xpath("//table/tbody/tr[7]/td")
 
 
+# navigate to the site number, select all the available dates
 def click_date_for_site(driver):
     found_site = 0
     found_row = None
-    #div = driver.find_element_by_xpath("//table/tbody/tr[15]/td[2]").click()
-    tbody = driver.find_element_by_xpath("//table/tbody")
     rows = driver.find_elements_by_class_name("null ")
 
     for row in rows:
@@ -134,47 +148,35 @@ def click_date_for_site(driver):
         print("Success: select available dates")
         print("number of days selected: ", selected)
 
-    #try:
-        #got_next_five = get_next_five(driver)
-    #except Exception as e:
-        #print("Fail: get next five", e)
-        #driver.quit()
-    #else:
-        #print("Success: get next five")
-        #print("returned value: ", got_next_five)
     return found_site
 
 
+# select all the available dates
 def select_avail_dates(driver, row):
     tds = row.find_elements_by_tag_name("td")
-    #tds.pop(0)
-    count = 0
-    length = len(tds)
 
+    # click the first available date
     tds[1].click()
     tds = row.find_elements_by_tag_name("td")
 
-
+    # wait until the hour is reached
     x = 0
     while time.localtime().tm_hour != target_hour:
         x += 1
 
-
+    # click the last date shown
     tds[10].click()
 
+    # click "book now" to get it
     book_now = driver.find_element_by_xpath(book_now_xpath)
     WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, book_now_xpath))).click()
 
-
+    # if it's too early then try again, just once. Still would be better written recursively
     if driver.find_element_by_class_name("booking-notification-block"):
         print("blocked")
         WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, continue_xpath))).click()
 
-
         tds = row.find_elements_by_tag_name("td")
-        #tds.pop(0)
-        count = 0
-        length = len(tds)
 
         tds[1].click()
         tds = row.find_elements_by_tag_name("td")
@@ -183,20 +185,10 @@ def select_avail_dates(driver, row):
         book_now = driver.find_element_by_xpath(book_now_xpath)
         WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, book_now_xpath))).click()
 
-
-
-    #for i in range(1, length):
-        #if i != 2:
-            #if not_stale(driver, tds[i]):
-                #tds[i].click()
-            #else:
-                #tds = row.find_elements_by_tag_name("td")
-                #tds[i].click()
-                #break
-        #count = i
-
     return 10
 
+
+# check that an element is not stale
 def not_stale(driver, element):
     try:
         element.is_enabled()
@@ -204,19 +196,43 @@ def not_stale(driver, element):
     except Exception as e:
         return False
 
+
+# used to select five days at a time to reserve
 def get_next_five(driver):
     next_five = driver.find_element_by_xpath(next_five_xpath)
 
     print(next_five.get_attribute("aria-label"))
 
-    #WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, next_five_xpath))).click()
-    #next_five.click()
     time.sleep(3)
     return True
 
 
+# open recreation.gov page
+def open_rec_gov(driver):
+    try:
+        with wait(driver):
+            driver.get(home)
+        assert 'Recreation.gov' in driver.title
+    except Exception as e:
+        print("Fail: Initial load ", e)
+        driver.quit()
+    else:
+        print("Success: Initial load")
 
 
+# click through to the next available dates for the site
+def click_next_days(driver):
+    try:
+        driver.find_element_by_xpath(next_days).click()
+        WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, next_days))).click()
+    except Exception as e:
+        print("Fail: click next days", e)
+        driver.quit
+    else:
+    print("Success: click next days", e)
+
+
+# set up browser
 try:
     driver = Firefox(options=options)
     driver.implicitly_wait(10)
@@ -226,19 +242,6 @@ except Exception as e:
 
 print("driver version:", driver.capabilities['moz:geckodriverVersion'])
 print("browser version:", driver.capabilities['browserVersion'])
-
-# open recreation.gov page
-#try:
-#    with wait(driver):
-#        driver.get(home)
-#    assert 'Recreation.gov' in driver.title
-#except Exception as e:
-#    print("Fail: Initial load ", e)
-#    driver.quit()
-#else:
-#    print("Success: Initial load")
-
-
 
 
 # nav to campground reservation page
@@ -264,6 +267,7 @@ else:
     print("Success: login")
 
 
+# navigate to the month 
 try:
     month = click_to_target_month(driver)
     print("month returned:", month)
@@ -275,8 +279,7 @@ else:
     print("Success: nav to target month")
 
 
-
-
+# click on the start date for the reservation 
 try:
     clicked_date = get_dates(driver)
 except Exception as e:
@@ -285,6 +288,8 @@ except Exception as e:
 else:
     print("Success: get dates returned", clicked_date)
 
+
+# navigate to the site and click on the first available date
 try:
     found_site = click_date_for_site(driver)
     assert target_site_num == found_site
@@ -295,13 +300,3 @@ else:
     print("Success: nav to site number returned", found_site)
 
 #driver.quit()
-
-#leave all this commented out:
-#try:
-    #driver.find_element_by_xpath(next_days).click()
-    #WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, next_days))).click()
-#except Exception as e:
-    #print("Fail: click next days", e)
-    #driver.quit
-#else:
-    #print("Success: click next days", e)
