@@ -3,6 +3,6 @@ It currently takes the month, day, site number, and time to make the reservation
 minutes hard coded in camp.py. 
 
 To find a campground page go to recreation.gov, find the campground page showing availability for
-each site in a table with multiple days
+each site in a table with multiple days.
 
 Hard code your name and password to use the login function.
